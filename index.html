@@ -89,10 +89,13 @@
             border: none !important;
             color: var(--text-dim) !important;
             box-shadow: none !important;
-            padding: 5px 15px !important;
+            padding: 10px !important;
             min-width: auto !important;
-            text-transform: uppercase;
-            font-weight: 500;
+        }
+
+        #settings-toggle-btn:hover {
+            color: var(--text-main);
+            transform: scale(1.15);
         }
 
         :is([data-theme="minimal"], [data-theme="minimal_dark"]) input[type="checkbox"] {
@@ -333,9 +336,9 @@
         }
 
         .bill-amount-input {
-            width: 80px !important;
-            padding: 5px 0 !important;
-            margin-left: 5px;
+            width: 85px !important;
+            padding: 5px 8px !important;
+            margin-left: 12px !important;
             text-align: right;
             font-size: 0.9em !important;
             border: none !important;
@@ -449,12 +452,11 @@
         <div id="ai-response-container"></div>
         
         <!-- Toggle Settings Button -->
-        <div style="display: flex; justify-content: center; margin-top: 15px;">
-            <button id="settings-toggle-btn" onclick="toggleSettingsMenu()" style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; padding: 5px 15px; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 0.8em; text-transform: uppercase; outline: none; min-width: auto; transition: color 0.2s;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="display: inline-block; transition: transform 0.3s;" id="sparkle-icon">
+        <div style="display: flex; justify-content: center; margin-top: 25px; margin-bottom: 5px;">
+            <button id="settings-toggle-btn" onclick="toggleSettingsMenu()" style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; padding: 10px; display: flex; align-items: center; justify-content: center; outline: none; min-width: auto; transition: color 0.2s, transform 0.2s;" title="Theme & Font Sizing">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" style="display: inline-block; transition: transform 0.3s;" id="sparkle-icon">
                     <path d="M12,2 C12,7.5 16.5,12 22,12 C16.5,12 12,16.5 12,22 C12,16.5 7.5,12 2,12 C7.5,12 12,7.5 12,2 Z M19,13 C19,16 21,18 24,18 C21,18 19,20 19,23 C19,20 17,18 14,18 C17,18 19,16 19,13 Z"/>
                 </svg>
-                <span>Settings</span>
             </button>
         </div>
 
