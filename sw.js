@@ -1,9 +1,9 @@
 const CACHE_NAME = 'simplemoney-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-512.png'
+  './',
+  'index.html',
+  'manifest.json',
+  'icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
