@@ -1120,5 +1120,24 @@
         }
 
     </script>
+
+    <!-- Initialize Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMPrE5x6i9kZ4y7l6jhhHZsDLLkxC2iwA",
+            authDomain: "simplemoney-9a580.firebaseapp.com",
+            projectId: "simplemoney-9a580",
+            storageBucket: "simplemoney-9a580.firebasestorage.app",
+            messagingSenderId: "24565452816",
+            appId: "1:24565452816:web:e36de95c0760fd70ac7a95",
+            measurementId: "G-G6LJRY0YE3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
 </body>
 </html>
