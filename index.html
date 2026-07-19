@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget-</title>
+    <title>SimpleMoney</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0b0b0b">
+    <link rel="apple-touch-icon" href="/icons/icon-512.png">
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -1119,6 +1122,16 @@
             applySize('normal');
         }
 
+        // --- PWA SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
     </script>
 
     <!-- Initialize Firebase -->
