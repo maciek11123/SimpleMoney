@@ -84,6 +84,17 @@
             color: var(--text-main) !important;
         }
 
+        :is([data-theme="minimal"], [data-theme="minimal_dark"]) #settings-toggle-btn {
+            background: transparent !important;
+            border: none !important;
+            color: var(--text-dim) !important;
+            box-shadow: none !important;
+            padding: 5px 15px !important;
+            min-width: auto !important;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
         :is([data-theme="minimal"], [data-theme="minimal_dark"]) input[type="checkbox"] {
             border: 3px solid var(--hr) !important;
             border-radius: 0 !important;
@@ -437,8 +448,18 @@
 
         <div id="ai-response-container"></div>
         
+        <!-- Toggle Settings Button -->
+        <div style="display: flex; justify-content: center; margin-top: 15px;">
+            <button id="settings-toggle-btn" onclick="toggleSettingsMenu()" style="background: transparent; border: none; color: var(--text-dim); cursor: pointer; padding: 5px 15px; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 0.8em; text-transform: uppercase; outline: none; min-width: auto; transition: color 0.2s;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="display: inline-block; transition: transform 0.3s;" id="sparkle-icon">
+                    <path d="M12,2 C12,7.5 16.5,12 22,12 C16.5,12 12,16.5 12,22 C12,16.5 7.5,12 2,12 C7.5,12 12,7.5 12,2 Z M19,13 C19,16 21,18 24,18 C21,18 19,20 19,23 C19,20 17,18 14,18 C17,18 19,16 19,13 Z"/>
+                </svg>
+                <span>Settings</span>
+            </button>
+        </div>
+
         <!-- Theme & Size Switcher -->
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;" id="theme-switcher-container">
+        <div style="display: none; flex-direction: column; gap: 12px; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 20px;" id="theme-switcher-container">
             <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
                 <span style="font-size: 0.8em; color: var(--text-dim); text-transform: uppercase;">Theme:</span>
                 <select id="theme-select" onchange="changeTheme(this.value)" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-main); font-family: inherit; font-size: 0.8em; padding: 5px 10px; outline: none; cursor: pointer; text-transform: uppercase;">
@@ -523,6 +544,21 @@
 
         function changeTheme(themeKey) {
             applyTheme(themeKey);
+        }
+
+        function toggleSettingsMenu() {
+            const container = document.getElementById('theme-switcher-container');
+            const btn = document.getElementById('settings-toggle-btn');
+            const icon = document.getElementById('sparkle-icon');
+            if (container.style.display === 'none') {
+                container.style.display = 'flex';
+                btn.style.color = 'var(--text-main)';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                container.style.display = 'none';
+                btn.style.color = 'var(--text-dim)';
+                icon.style.transform = 'rotate(0deg)';
+            }
         }
 
         // --- 0.0.1 FONT SIZE ENGINE CONFIGURATION ---
