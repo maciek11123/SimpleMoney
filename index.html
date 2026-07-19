@@ -1111,7 +1111,8 @@
                     biweeklyExpenses: state.biweeklyExpenses,
                     monthlyExpenses: state.monthlyExpenses,
                     deferredBills: state.deferredBills,
-                    paidBills: state.paidBills
+                    paidBills: state.paidBills,
+                    updatedAt: new Date().toISOString()
                 }));
             } catch (e) {
                 console.error("Error saving state to localStorage:", e);
@@ -1224,29 +1225,42 @@
                 const docRef = doc(db, "users", userId);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    if (data.currentBalance !== undefined) {
-                        state.currentBalance = data.currentBalance;
-                        const balInput = document.getElementById("balance-input");
-                        if (balInput) balInput.value = state.currentBalance;
-                    }
-                    if (data.biweeklyExpenses) state.biweeklyExpenses = data.biweeklyExpenses;
-                    if (data.monthlyExpenses) state.monthlyExpenses = data.monthlyExpenses;
-                    if (data.deferredBills) state.deferredBills = data.deferredBills;
-                    if (data.paidBills) state.paidBills = data.paidBills;
-
-                    recalculateCashFlow();
-
-                    // Sync firestore data to localStorage cache
+                    const remoteData = docSnap.data();
+                    
+                    // Retrieve local state to compare timestamps
+                    let localData = null;
                     try {
-                        localStorage.setItem('simplemoney-state-data', JSON.stringify({
-                            currentBalance: state.currentBalance,
-                            biweeklyExpenses: state.biweeklyExpenses,
-                            monthlyExpenses: state.monthlyExpenses,
-                            deferredBills: state.deferredBills,
-                            paidBills: state.paidBills
-                        }));
-                    } catch (err) {}
+                        const s = localStorage.getItem('simplemoney-state-data');
+                        if (s) localData = JSON.parse(s);
+                    } catch (e) {}
+
+                    const remoteTime = remoteData.updatedAt ? new Date(remoteData.updatedAt).getTime() : 0;
+                    const localTime = (localData && localData.updatedAt) ? new Date(localData.updatedAt).getTime() : 0;
+
+                    if (localTime > remoteTime) {
+                        // Local state is newer, upload local state to Firestore
+                        console.log("Local state is newer than remote Firestore. Syncing local to remote...");
+                        if (window.saveStateToFirebase) window.saveStateToFirebase();
+                    } else {
+                        // Remote state is newer or equal, update local state
+                        console.log("Remote state is newer. Syncing remote to local...");
+                        if (remoteData.currentBalance !== undefined) {
+                            state.currentBalance = remoteData.currentBalance;
+                            const balInput = document.getElementById("balance-input");
+                            if (balInput) balInput.value = state.currentBalance;
+                        }
+                        if (remoteData.biweeklyExpenses) state.biweeklyExpenses = remoteData.biweeklyExpenses;
+                        if (remoteData.monthlyExpenses) state.monthlyExpenses = remoteData.monthlyExpenses;
+                        if (remoteData.deferredBills) state.deferredBills = remoteData.deferredBills;
+                        if (remoteData.paidBills) state.paidBills = remoteData.paidBills;
+
+                        recalculateCashFlow();
+                        saveStateToLocalStorage();
+                    }
+                } else {
+                    // Document doesn't exist on Firestore yet, upload current local state
+                    console.log("No remote Firestore document found. Uploading current local state...");
+                    if (window.saveStateToFirebase) window.saveStateToFirebase();
                 }
             } catch (e) {
                 console.error("Error loading state from Firestore:", e);
