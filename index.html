@@ -1110,16 +1110,34 @@
             applySize(sizeKey);
         }
 
+        function parseTimestamp(val) {
+            if (!val) return 0;
+            if (typeof val === 'string' || typeof val === 'number') {
+                const t = new Date(val).getTime();
+                return isNaN(t) ? 0 : t;
+            }
+            if (val.toDate && typeof val.toDate === 'function') {
+                return val.toDate().getTime();
+            }
+            if (val.seconds !== undefined) {
+                return val.seconds * 1000;
+            }
+            const t = new Date(val).getTime();
+            return isNaN(t) ? 0 : t;
+        }
+
         function saveStateToLocalStorage() {
             try {
-                localStorage.setItem('simplemoney-state-data', JSON.stringify({
+                const data = {
                     currentBalance: state.currentBalance,
                     biweeklyExpenses: state.biweeklyExpenses,
                     monthlyExpenses: state.monthlyExpenses,
                     deferredBills: state.deferredBills,
                     paidBills: state.paidBills,
                     updatedAt: new Date().toISOString()
-                }));
+                };
+                localStorage.setItem('simplemoney-state-data', JSON.stringify(data));
+                console.log("Saved state to localStorage:", data);
             } catch (e) {
                 console.error("Error saving state to localStorage:", e);
             }
@@ -1130,6 +1148,7 @@
                 const s = localStorage.getItem('simplemoney-state-data');
                 if (s) {
                     const data = JSON.parse(s);
+                    console.log("Loaded state from localStorage:", data);
                     if (data.currentBalance !== undefined) {
                         state.currentBalance = data.currentBalance;
                         const balInput = document.getElementById("balance-input");
@@ -1232,6 +1251,7 @@
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const remoteData = docSnap.data();
+                    console.log("Loaded remote state from Firestore:", remoteData);
                     
                     // Retrieve local state to compare timestamps
                     let localData = null;
@@ -1240,30 +1260,43 @@
                         if (s) localData = JSON.parse(s);
                     } catch (e) {}
 
-                    const remoteTime = remoteData.updatedAt ? new Date(remoteData.updatedAt).getTime() : 0;
-                    const localTime = (localData && localData.updatedAt) ? new Date(localData.updatedAt).getTime() : 0;
+                    const remoteTime = parseTimestamp(remoteData.updatedAt);
+                    const localTime = localData ? parseTimestamp(localData.updatedAt) : 0;
 
                     const hasLocalBalance = state.currentBalance !== 0;
                     const hasRemoteBalance = remoteData.currentBalance !== undefined && remoteData.currentBalance !== 0;
+                    const hasLocalPaidBills = state.paidBills && state.paidBills.length > 0;
+                    const hasRemotePaidBills = remoteData.paidBills && remoteData.paidBills.length > 0;
 
-                    if (localTime > remoteTime || (hasLocalBalance && !hasRemoteBalance)) {
-                        // Local state is newer, or remote state doesn't have a valid balance. Sync local to remote.
+                    if (localTime > remoteTime || (hasLocalBalance && !hasRemoteBalance) || (hasLocalPaidBills && !hasRemotePaidBills)) {
+                        // Local state is newer, or remote state is uninitialized. Sync local to remote.
                         console.log("Local state is newer or remote is uninitialized. Syncing local to remote...");
                         if (window.saveStateToFirebase) window.saveStateToFirebase();
-                    } else if (hasRemoteBalance) {
-                        // Remote state is newer or equal and has a valid balance. Sync remote to local.
-                        console.log("Remote state is newer and has a balance. Syncing remote to local...");
-                        state.currentBalance = remoteData.currentBalance;
-                        const balInput = document.getElementById("balance-input");
-                        if (balInput) balInput.value = state.currentBalance;
-                        
+                    } else {
+                        // Remote state is newer or equal. Sync remote to local.
+                        console.log("Remote state is newer/equal. Syncing remote to local...");
+                        if (remoteData.currentBalance !== undefined) {
+                            state.currentBalance = remoteData.currentBalance;
+                            const balInput = document.getElementById("balance-input");
+                            if (balInput) balInput.value = state.currentBalance;
+                        }
                         if (remoteData.biweeklyExpenses) state.biweeklyExpenses = remoteData.biweeklyExpenses;
                         if (remoteData.monthlyExpenses) state.monthlyExpenses = remoteData.monthlyExpenses;
                         if (remoteData.deferredBills) state.deferredBills = remoteData.deferredBills;
                         if (remoteData.paidBills) state.paidBills = remoteData.paidBills;
 
                         recalculateCashFlow();
-                        saveStateToLocalStorage();
+                        // Save the synced state locally without triggering timestamp update (keep remote timestamp)
+                        try {
+                            localStorage.setItem('simplemoney-state-data', JSON.stringify({
+                                currentBalance: state.currentBalance,
+                                biweeklyExpenses: state.biweeklyExpenses,
+                                monthlyExpenses: state.monthlyExpenses,
+                                deferredBills: state.deferredBills,
+                                paidBills: state.paidBills,
+                                updatedAt: remoteData.updatedAt || new Date().toISOString()
+                            }));
+                        } catch (err) {}
                     }
                 } else {
                     // Document doesn't exist on Firestore yet, upload current local state
