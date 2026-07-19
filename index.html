@@ -852,13 +852,19 @@
         }
 
         // --- 5. INTERACTIONS ---
-        document.getElementById("balance-input").addEventListener('input', (e) => {
+        const balInput = document.getElementById("balance-input");
+        const handleBalanceInput = (e) => {
             const val = parseFloat(e.target.value);
             state.currentBalance = isNaN(val) ? 0 : val;
             recalculateCashFlow();
             saveStateToLocalStorage();
             if (window.saveStateToFirebase) window.saveStateToFirebase();
-        });
+        };
+        if (balInput) {
+            balInput.addEventListener('input', handleBalanceInput);
+            balInput.addEventListener('change', handleBalanceInput);
+            balInput.addEventListener('blur', handleBalanceInput);
+        }
 
         function pushBill(instanceId) {
             if (!state.deferredBills.includes(instanceId)) {
@@ -1237,18 +1243,20 @@
                     const remoteTime = remoteData.updatedAt ? new Date(remoteData.updatedAt).getTime() : 0;
                     const localTime = (localData && localData.updatedAt) ? new Date(localData.updatedAt).getTime() : 0;
 
-                    if (localTime > remoteTime) {
-                        // Local state is newer, upload local state to Firestore
-                        console.log("Local state is newer than remote Firestore. Syncing local to remote...");
+                    const hasLocalBalance = state.currentBalance !== 0;
+                    const hasRemoteBalance = remoteData.currentBalance !== undefined && remoteData.currentBalance !== 0;
+
+                    if (localTime > remoteTime || (hasLocalBalance && !hasRemoteBalance)) {
+                        // Local state is newer, or remote state doesn't have a valid balance. Sync local to remote.
+                        console.log("Local state is newer or remote is uninitialized. Syncing local to remote...");
                         if (window.saveStateToFirebase) window.saveStateToFirebase();
-                    } else {
-                        // Remote state is newer or equal, update local state
-                        console.log("Remote state is newer. Syncing remote to local...");
-                        if (remoteData.currentBalance !== undefined) {
-                            state.currentBalance = remoteData.currentBalance;
-                            const balInput = document.getElementById("balance-input");
-                            if (balInput) balInput.value = state.currentBalance;
-                        }
+                    } else if (hasRemoteBalance) {
+                        // Remote state is newer or equal and has a valid balance. Sync remote to local.
+                        console.log("Remote state is newer and has a balance. Syncing remote to local...");
+                        state.currentBalance = remoteData.currentBalance;
+                        const balInput = document.getElementById("balance-input");
+                        if (balInput) balInput.value = state.currentBalance;
+                        
                         if (remoteData.biweeklyExpenses) state.biweeklyExpenses = remoteData.biweeklyExpenses;
                         if (remoteData.monthlyExpenses) state.monthlyExpenses = remoteData.monthlyExpenses;
                         if (remoteData.deferredBills) state.deferredBills = remoteData.deferredBills;
